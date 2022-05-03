@@ -13,7 +13,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -43,29 +47,13 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
         }
 
-       // String topPackageName ;
-       // if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            UsageStatsManager mUsageStatsManager = (UsageStatsManager)getSystemService(Context.USAGE_STATS_SERVICE);
-//            long time = System.currentTimeMillis();
-//            Log.d("TIME", String.valueOf(time));
-//            // We get usage stats for the last 10 seconds
-//            List<UsageStats> stats = mUsageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000*10, time);
-//            Log.d("STATS", String.valueOf(stats));
-//            // Sort the stats by the last time used
-//            if(stats != null) {
-//                SortedMap<Long,UsageStats> mySortedMap = new TreeMap<Long,UsageStats>();
-//                for (UsageStats usageStats : stats) {
-//
-//                    mySortedMap.put(usageStats.getLastTimeUsed(),usageStats);
-//                }
-//                if(mySortedMap != null && !mySortedMap.isEmpty()) {
-//                    topPackageName =  mySortedMap.get(mySortedMap.lastKey()).getPackageName();
-//                    Log.d("FINAL OUTPUT",topPackageName);
-//                }
-//            }
-      //  }
+
         long time = System.currentTimeMillis();
         Log.d("TIME", String.valueOf(time));
+
+        String[] mobileArray = {"Recent Apps"};
+
+        ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(mobileArray));
 
         final UsageStatsManager usageStatsManager=(UsageStatsManager)getSystemService(Context.USAGE_STATS_SERVICE);
         final Map<String,UsageStats> queryUsageStats=usageStatsManager.queryAndAggregateUsageStats(time - 1000*100, time);
@@ -73,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
             // iterating over usage stats and considering only those apps which have appeared atleast once in foreground
             if (name.getTotalTimeInForeground() > 0) {
                 Log.d("PACKAGE NAME", name.getPackageName() + " " + String.valueOf(name.getTotalTimeInForeground()));
+                arrayList.add((name.getPackageName()));
             }
         }
 
@@ -83,11 +72,19 @@ public class MainActivity extends AppCompatActivity {
         ApplicationInfo ai;
         try {
             ai = pm.getApplicationInfo( "com.example.myapplication", 0);
-        } catch (Error | PackageManager.NameNotFoundException e) {
+        } catch ( PackageManager.NameNotFoundException e) {
             ai = null;
         }
         final String applicationName = (String) (ai != null ? pm.getApplicationLabel(ai) : "(unknown)");
         Log.d("APK NAME",applicationName);
+
+
+
+        ArrayAdapter adapter = new ArrayAdapter<String>(this,
+                R.layout.activity_recent_list_holder, arrayList);
+
+        ListView listView = (ListView) findViewById(R.id.recentAppListView);
+        listView.setAdapter(adapter);
 
     }
 }
