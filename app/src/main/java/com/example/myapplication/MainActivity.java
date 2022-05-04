@@ -13,8 +13,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,33 +54,39 @@ public class MainActivity extends AppCompatActivity {
         long time = System.currentTimeMillis();
         Log.d("TIME", String.valueOf(time));
 
-        String[] mobileArray = {"Recent Apps"};
+        String[] mobileArray = {};
+        String[] pckgArr = {};
+        String[] apkName = {};
 
         ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(mobileArray));
+        ArrayList<String> pckgArray = new ArrayList<String>(Arrays.asList(pckgArr));
+        ArrayList<String> apkNameArray = new ArrayList<String>(Arrays.asList(apkName));
 
         final UsageStatsManager usageStatsManager=(UsageStatsManager)getSystemService(Context.USAGE_STATS_SERVICE);
-        final Map<String,UsageStats> queryUsageStats=usageStatsManager.queryAndAggregateUsageStats(time - 1000*100, time);
+        final Map<String,UsageStats> queryUsageStats=usageStatsManager.queryAndAggregateUsageStats(time - 1000*10, time);
         for (UsageStats name : queryUsageStats.values()) {
             // iterating over usage stats and considering only those apps which have appeared atleast once in foreground
             if (name.getTotalTimeInForeground() > 0) {
-                Log.d("PACKAGE NAME", name.getPackageName() + " " + String.valueOf(name.getTotalTimeInForeground()));
-                arrayList.add((name.getPackageName()));
+
+                // Code for extracting App Name from package name... Work in progress ,, need to wrap it in loop
+                final PackageManager pm = getApplicationContext().getPackageManager();
+                ApplicationInfo ai;
+                try {
+                    ai = pm.getApplicationInfo( name.getPackageName(), 0);
+                } catch ( PackageManager.NameNotFoundException e) {
+                    ai = null;
+                }
+                final String applicationName = (String) (ai != null ? pm.getApplicationLabel(ai) : "(unknown)");
+
+
+                Log.d("PACKAGE NAME", name.getPackageName()+" " + applicationName+ " " + String.valueOf(name.getTotalTimeInForeground()));
+                arrayList.add((applicationName +"--"+name.getPackageName()));
+                pckgArray.add(name.getPackageName());
+                apkNameArray.add(applicationName);
             }
         }
 
         Log.d("TOTAL APPS", String.valueOf(queryUsageStats.size()));
-
-        // Code for extracting App Name from package name... Work in progress ,, need to wrap it in loop
-        final PackageManager pm = getApplicationContext().getPackageManager();
-        ApplicationInfo ai;
-        try {
-            ai = pm.getApplicationInfo( "com.example.myapplication", 0);
-        } catch ( PackageManager.NameNotFoundException e) {
-            ai = null;
-        }
-        final String applicationName = (String) (ai != null ? pm.getApplicationLabel(ai) : "(unknown)");
-        Log.d("APK NAME",applicationName);
-
 
 
         ArrayAdapter adapter = new ArrayAdapter<String>(this,
@@ -85,6 +94,27 @@ public class MainActivity extends AppCompatActivity {
 
         ListView listView = (ListView) findViewById(R.id.recentAppListView);
         listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                try {
+                    Intent launchIntent = getPackageManager().getLaunchIntentForPackage(pckgArray.get(position));
+                    startActivity( launchIntent );
+                }catch (Exception e){
+                    Toast.makeText(MainActivity.this, "No launch activity available "+e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+
+
+
+    }
+
+
+
+    public void launchApp(String pkgName){
 
     }
 }
