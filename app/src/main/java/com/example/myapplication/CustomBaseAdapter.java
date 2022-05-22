@@ -7,8 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -47,6 +49,13 @@ public class CustomBaseAdapter extends BaseAdapter {
         convertView = inflater.inflate(R.layout.custom_list_view,null);
         TextView textView = (TextView)convertView.findViewById(R.id.appName);
         ImageView imgView = (ImageView)convertView.findViewById(R.id.appIcon);
+//        Button button = (Button)convertView.findViewById(R.id.infoButton);
+//        button.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Toast.makeText(ctx, "Clicked", Toast.LENGTH_SHORT).show();
+//            }
+//        });
         textView.setText(appName.get(position));
         imgView.setImageDrawable(appIcon.get(position));
         return convertView ;
