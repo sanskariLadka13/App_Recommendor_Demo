@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -16,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -50,17 +52,18 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
         }
 
-
         long time = System.currentTimeMillis();
         Log.d("TIME", String.valueOf(time));
 
         String[] mobileArray = {};
         String[] pckgArr = {};
         String[] apkName = {};
+        Drawable[] apkIcon = {};
 
         ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(mobileArray));
         ArrayList<String> pckgArray = new ArrayList<String>(Arrays.asList(pckgArr));
         ArrayList<String> apkNameArray = new ArrayList<String>(Arrays.asList(apkName));
+        ArrayList<Drawable> appIcon = new ArrayList<Drawable>(Arrays.asList(apkIcon));
 
         final UsageStatsManager usageStatsManager=(UsageStatsManager)getSystemService(Context.USAGE_STATS_SERVICE);
         final Map<String,UsageStats> queryUsageStats=usageStatsManager.queryAndAggregateUsageStats(time - 1000*10, time);
@@ -76,24 +79,36 @@ public class MainActivity extends AppCompatActivity {
                 } catch ( PackageManager.NameNotFoundException e) {
                     ai = null;
                 }
-                final String applicationName = (String) (ai != null ? pm.getApplicationLabel(ai) : "(unknown)");
+                final String applicationName = (String) (ai != null ? pm.getApplicationLabel(ai) : "Unknown");
 
+                if(applicationName == "Unknown") continue;
 
                 Log.d("PACKAGE NAME", name.getPackageName()+" " + applicationName+ " " + String.valueOf(name.getTotalTimeInForeground()));
                 arrayList.add((applicationName +"--"+name.getPackageName()));
                 pckgArray.add(name.getPackageName());
                 apkNameArray.add(applicationName);
+
+                try
+                {
+                    Drawable icon = getPackageManager().getApplicationIcon(name.getPackageName());
+                    appIcon.add(icon);
+                }
+                catch (PackageManager.NameNotFoundException e)
+                {
+                    Drawable icon = null;
+                    appIcon.add(icon);
+                    e.printStackTrace();
+                }
+
             }
         }
 
         Log.d("TOTAL APPS", String.valueOf(queryUsageStats.size()));
 
-
-        ArrayAdapter adapter = new ArrayAdapter<String>(this,
-                R.layout.activity_recent_list_holder, arrayList);
+       CustomBaseAdapter customAdapter = new CustomBaseAdapter(getApplicationContext(),apkNameArray,appIcon);
 
         ListView listView = (ListView) findViewById(R.id.recentAppListView);
-        listView.setAdapter(adapter);
+        listView.setAdapter(customAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
