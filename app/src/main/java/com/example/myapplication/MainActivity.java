@@ -21,6 +21,10 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +39,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if(!Python.isStarted()){
+            Python.start(new AndroidPlatform(this));
+        }
+
+        Python py = Python.getInstance();
+        PyObject pyobj = py.getModule("helloworld");
+        PyObject obj = pyobj.callAttr("hello",5,8);
+        Log.d("PYTHON",obj.toString());
         // Checking for permission , if it's not allowed then prompt a permission screen
         boolean granted = false;
         AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
@@ -124,9 +136,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-
-
-
 
     public void launchApp(String pkgName){
 
